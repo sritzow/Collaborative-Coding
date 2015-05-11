@@ -1,0 +1,4 @@
+Options +ExecCGI
+AddType application/x-httpd-php .php .html
+AddHandler application/x-httpd-php .html
+Options +Multiviews
