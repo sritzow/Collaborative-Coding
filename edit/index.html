@@ -1,0 +1,210 @@
+<!DOCTYPE HTML>
+<?php 
+session_start();
+session_destroy();
+$_SESSION = array();
+session_start();
+$session_id = '';
+if (isset($_SESSION['session_id'])) {
+	$session_id = $_SESSION['session_id'];
+}
+?>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		<link href="style.css" rel="stylesheet">
+		<title>Typing Test</title>
+		<style>
+			body { padding-top: 75px; }
+			.starter-template { padding: 40px 15px; text-align: center; }
+			#code-line { width: 95%; height:500px; }
+			#code-overlay { pointer-events: none; padding-top: 3px; padding-left: 3px; top:-507px; position:relative; width:95%; height: 500px; border: 1px solid; border-color: blue; border-radius: 10px; }
+		</style>
+	</head>
+	<body>
+	<div class="container">
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="index.html">Project name</a>
+				</div>
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#">About</a></li>
+						<li><a href="#">Contact</a></li>
+						
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<?php if (isset($_SESSION['session_id']) && $_SESSION['session_id'] != '') { ?>
+						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $_SESSION['username']; ?> <span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="#">Action</a></li>
+								<li><a href="#">Another action</a></li>
+								<li><a href="#">Something else here</a></li>
+								<li class="divider"></li>
+								<li class="dropdown-header">Nav header</li>
+								<li><a href="#">Separated link</a></li>
+								<li><a href="#">One more separated link</a></li>
+							</ul>
+						</li>
+						<?php } else { ?>
+						<li><a href="account.html">Login</a></li>
+						<li><a href="account.html">Register</a></li>
+						<?php } ?>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div><!--/.container-fluid -->
+		</nav>
+		<div class="starter-template">
+			<?php if ($session_id == '') { ?>
+			<form method = "POST" action = "login.php">
+				Username: <input style = 'color: black;' type = "text" name = "username" required/><br>
+				Password: <input style = 'color: black;' type = "password" name = "password" required/><br>
+				<input style = 'color: black;' type = "submit" name = "submit">
+			</form>
+			<?php } else { ?>
+			<p id = 'error' style = 'display:none'>You are not authorized to view this page.</p>
+			<img id = 'codeRun' onclick = 'runCode()' style = "cursor: pointer; padding: 10px; width:50px; "src = 'images/run.png' alt = 'run' />
+			<div id = "background" style = "text-align:left;" class="lead">
+				<pre id = "code-line" name = "code"></pre>
+			</div>
+		</div>
+    </div>
+	<?php } ?>
+	<div class="site-wrapper">
+		<div class="site-wrapper-inner">
+			<div class="cover-container">
+				<!--
+				<div class="masthead clearfix">
+					<div class="inner">
+						<h3 id = 'file_name' class="masthead-brand">- File Name Here -</h3>
+						<nav>
+							<ul class="nav masthead-nav">
+								<li class="active"><a href="index.html">Home</a></li>
+								<li><a href="account.html">Account Settings</a></li>
+								<li><a href="signout.php">Signout</a></li>
+							</ul>
+						</nav>
+					</div>
+				</div>-->
+
+				<div class="mastfoot">
+					<div class="inner">
+						<p>Built using <a href="http://getbootstrap.com">Bootstrap</a>, <a href = "http://jquery.com/">jQuery</a>, <a href = "http://ace.c9.io/#nav=about">Ace</a>, <a href = "http://socket.io/">Socket IO</a>, <a href = "https://nodejs.org/">node.js</a><br>
+						Content &copy; <a href="https://twitter.com/SpencerRitzow">2015 Spencer Ritzow</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	</body>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="socket.io/socket.io.js"></script>
+	<?php if ($session_id != '') { ?>
+	<script>
+
+	function runCode() {
+		try {
+			var result = eval(editor.getValue());
+			if (result != null) {
+				console.log(result);
+			}
+		} catch(e) {
+			// report error...
+			console.log(e);
+		}
+	}
+
+	var socket = io.connect('http://localhost:8000');
+	var insert = false;
+	var lastsync = 0;
+	var editor = null;
+	var noReconnect = false;
+	var syncAfter = 25;
+	socket.on('connect', function(){
+		var hash = window.location.hash.substring(1);
+		console.log(hash);
+		if (hash != null && hash != '') {
+			socket.emit('init', '<?php echo $_SESSION['session_id'] ?>', hash);
+		} else {
+			socket.close();
+		}
+	});
+	
+	socket.on('disconnect', function() {
+		socket.close();
+		socket = io.connect('http://localhost:8000');
+	});
+	
+	socket.on('fail', function() {
+		console.log('we failed');
+		if (editor != null) 
+			editor.destroy();
+		$('#code-line').remove();
+		$('#codeRun').remove();
+		$('#error').show();
+		noReconnect = true;
+		socket.close();
+	});
+	
+	socket.on('create_editor', function(lang, canEdit) {
+		console.log('create editor');
+		if (editor == null) {
+			editor = ace.edit("code-line");
+			editor.setTheme("ace/theme/twilight");
+			editor.getSession().setMode("ace/mode/" + lang);
+			editor.setHighlightActiveLine(true);
+			editor.setReadOnly(!canEdit);
+			editor.getSession().on('change', function(e) {
+				if (!insert) {
+					console.log('emit change');
+					socket.emit('change', e.data, '<?php echo $_SESSION['session_id'] ?>');
+					lastsync++;
+					if (lastsync > syncAfter) {
+						socket.emit('sync', editor.getValue());
+						lastsync = 0;
+					}
+				}
+			});
+		}
+	});
+	
+	socket.on('readonly', function(readonly) {
+		if (editor != null) 
+			editor.setReadOnly(readonly);
+	});
+
+	socket.on('update', function(obj){
+		insert = true;
+		console.log(obj);
+		if (editor != null) 
+			editor.getSession().getDocument().applyDeltas(obj);
+		insert = false;
+	});
+
+	socket.on('initial_code', function(code, syncs) {
+		insert = true;
+		syncAfter = syncs;
+		console.log(code);
+		if (editor != null) 
+			editor.setValue(code);
+		insert = false;
+	});
+	</script>
+	<?php } ?>
+</html>

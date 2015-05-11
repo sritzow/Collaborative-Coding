@@ -1,0 +1,22 @@
+<?php 
+session_start();
+print_r($_REQUEST);
+?>
+<html>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="socket.io/socket.io.js"></script>
+	<script>
+	var insert = false;
+	var lastsync = 0;
+	var editor = null;
+	editor = ace.edit("code-line");
+	editor.setTheme("ace/theme/twilight");
+	editor.getSession().setMode("ace/mode/" + lang);
+	editor.setHighlightActiveLine(true);
+	editor.setReadOnly(!canEdit);
+	</script>
+	<body>
+		<pre id = "code-line" name = "code"></pre>
+	</body>
+</html>

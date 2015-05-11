@@ -1,0 +1,10 @@
+{
+  "name": "socket.io-chat",
+  "version": "0.0.0",
+  "description": "A simple chat client using socket.io",
+  "main": "server.js",
+  "author": "Spencer Ritzow",
+  "dependencies": {
+	"socket.io": "latest"
+  }
+}
