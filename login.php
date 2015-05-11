@@ -24,9 +24,8 @@ try {
 	}
 } catch(PDOException $e) {
 	echo $e->getMessage();
-	die();
 }
 
-header('Location: collab.html');
+header('Location: index.html');
 die();
 ?>
