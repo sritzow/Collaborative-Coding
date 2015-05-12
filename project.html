@@ -75,51 +75,90 @@ if (isset($_SESSION['session_id'])) {
 					try {
 						$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 						
-						$project_query = $pdo->prepare("SELECT * FROM folders WHERE project_id = ? AND folder_parent_id IS NOT NULL");
-						$project_query->execute(array(1));
+						$project_query = $pdo->prepare("SELECT * FROM folders WHERE project_id = ? AND folder_parent_id IS NULL");
+						$project_query->execute(array($_GET['id']));
 						
-						while ($folders = $project_query->fetch()) {
-							print_r($folders);
+						function getFiles($folder_id, $pdo) {
+							$files = $pdo->prepare("SELECT * FROM files WHERE folder_id = ?");
+							$files->execute(array($folder_id));
+							while ($file = $files->fetch()) {
+								echo '<li><span style = "cursor: pointer;" onclick = "setTitle(this); openFile(\'' .  $file['id'] . '\');">' . $file['name'] . '.' . $file['extension'] . '</span></li>';
+							}
 						}
+						
+						function getChildren($folder_id, $pdo) {
+							$query = $pdo->prepare("SELECT * FROM folders WHERE folder_parent_id = ?");
+							$query->execute(array($folder_id));
+							while ($folder = $query->fetch()) {
+								echo '<li>' . $folder['folder_name'];
+								echo '<ul>';
+								if ($folder['has_child'] == 1) {
+									getChildren($folder['id'], $pdo);
+								}
+								getFiles($folder['id'], $pdo);
+								echo '<li><span  id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder_id . '" style = "cursor: pointer;">+</span></li>';
+								echo '</ul>';
+								echo '</li>';
+							}
+						}
+						
+						while ($folder = $project_query->fetch()) {
+							echo '<li>' . $folder['folder_name'];
+							echo '<ul>';
+							getChildren($folder['id'], $pdo);
+							getFiles($folder['id'], $pdo);
+							echo '<li><span id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder['id'] . '" style = "cursor: pointer;">+</span></li>';
+							echo '</ul>';
+							echo '</li>';
+						}
+						echo '<li><span id = "0" data-toggle = "modal" data-target = "#fileModal" folder_id = "0" style = "cursor: pointer;">+</span></li>';
 					} catch (PDOException $e) {
 					
 					}
-					
 					?>
-					<li class="tree-empty"><a href="">Home</a></li>
-					<li class="tree-opened"><span>Category</span>
-					<ul style="display: block;">
-					  <li class="tree-closed"><a href="#">jQuery</a>
-						<ul style="display: none;">
-						  <li class="tree-empty"><a href="#">jQuery</a></li>
-						  <li class="tree-empty"><a href="#">jQuery UI</a></li>
-						  <li class="tree-empty"><a href="#">jQuery Mobile</a></li>
-						</ul>
-					  </li>
-					  <li class="tree-opened"><a href="#">JavaScript</a>
-						<ul style="display: block;">
-						  <li class="tree-empty tree-opened"><a class="active" href="#">AngularJS</a></li>
-						  <li class="tree-empty"><a href="#">React</a></li>
-						  <li class="tree-empty"><a href="#">Backbone</a></li>
-						</ul>
-					  </li>
-					  <li class="tree-empty"><a href="#suits">Golang</a></li>
-					</ul>
-				  </li>
-				  <li class="tree-closed"><a href="#about">About</a>
-					<ul style="display: none;">
-					  <li class="tree-empty"><a href="#">Contact</a></li>
-					  <li class="tree-empty"><a href="#">Blog</a></li>
-					  <li class="tree-closed"><a href="#">Jobs</a>
-						<ul style="display: none;">
-						  <li class="tree-empty"><a href="#jobs1">Job 1</a></li>
-						  <li class="tree-empty"><a href="#jobs2">Job 2</a></li>
-						  <li class="tree-empty"><a href="#jobs3">Job 3</a></li>
-						</ul>
-					  </li>
-					</ul>
-				  </li>
 				</ul>
+			</div>
+			<div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 style = "color: black;" class="modal-title" id="fileModalLabel">Create New</h4>
+						</div>
+						<div class="modal-body">
+							<form>
+								<input type = "hidden" id = "file-type" name = "file-type" value = "Folder">
+								<input type = "hidden" id = "modal_folder_id" name = "modal_folder_id" value = "">
+								<input type = "hidden" id = "modal_project_id" name = "modal_project_id" value = "<?php echo $_GET['id']; ?>">
+								<div class="row">
+									<div class="col-lg-10">
+										<div class="form-group">
+											<div class="input-group">
+												<div class="input-group-btn">
+													<button id = "file-type-button" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><span id = 'file-type-span'>Folder </span><span class="caret"></span></button>
+													<ul class="dropdown-menu" role="menu">
+														<li><a onclick = "setType('Folder');">Folder</a></li>
+														<li><a onclick = "setType('File');">File</a></li>
+													</ul>
+												</div><!-- /btn-group -->
+												<input id = "file-name" type="text" class="form-control" aria-label="...">
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button onclick = "createFolder();" type="button" class="btn btn-primary">Create</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "col-md-6 col-md-offset-1">
+				<span id = "file-title"></span><br/><br />
+				<div id = "code-container" style = "text-align:left;" class="lead">
+					<pre id = "code-line"></pre>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -142,8 +181,48 @@ if (isset($_SESSION['session_id'])) {
 	<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/bootstrap.min.js"></script>
 	<script src="dist/jquery.treemenu.js"></script>
+	<script src="socket.io/socket.io.js"></script>
 	<script>
+	function createFolder() {
+		var file_name = $('#file-name').val();
+		if (file_name != null && file_name != '') {
+			$('#fileModal').modal('hide');
+			console.log($('#file-type').val() + ' -- ' + $('#modal_folder_id').val() + ' -- ' + $('#file-name').val());
+			$.ajax({
+				url: 'create_file.php',
+				type: 'post',
+				data: {
+					file_type: $('#file-type').val(),
+					folder_id: $('#modal_folder_id').val(),
+					file_name: $('#file-name').val(),
+					project_id: $('#modal_project_id').val()
+				},
+				
+				success: function(data) {
+					console.log(data);
+					if(data == "ok") {
+						
+					} else {
+						
+					}
+				},
+				
+				error: function(data) {
+					console.log(data);
+				}
+			});
+		}
+	}
+	
+	$('#fileModal').on('show.bs.modal', function (event) {
+		var button = $(event.relatedTarget);
+		var file_id = button.attr("folder_id");
+		if (!isNaN(file_id)) {
+			$('#modal_folder_id').val(file_id);
+		}
+	});
+	var session_id = '<?php echo $_SESSION["session_id"] ?>';
 	$(".tree").treemenu({delay:500}).openActive();
-
 	</script>
+	<script src="js/client.js"></script>
 </html>

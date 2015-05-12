@@ -203,6 +203,7 @@ io.sockets.on('connection', function(socket) {
 	
 	socket.on('disconnect', function() {
 		console.log('Client disconnect');
+		file_id = socket.room;
         socket.leave(socket.room);
     });
 });
