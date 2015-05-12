@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-$email = $_POST['loginEmail'];
-$password = $_POST['loginPassword'];
+$email = trim($_POST['loginEmail']);
+$password = trim($_POST['loginPassword']);
 
 try {
 	$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
@@ -20,6 +20,9 @@ try {
 				$_SESSION['username'] = $obj['username'];
 				$query = $pdo->prepare('UPDATE accounts SET session_id = ? WHERE id = ?');
 				$query->execute(array(session_id(), $obj['id']));
+			} else {
+				header("Location: account.html?login=0");
+				die();
 			}
 		}
 	}
@@ -27,6 +30,6 @@ try {
 	echo $e->getMessage();
 }
 
-/*header('Location: index.html');
-die();*/
+header('Location: index.html');
+die();
 ?>

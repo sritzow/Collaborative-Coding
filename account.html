@@ -62,44 +62,65 @@ if (isset($_SESSION['session_id'])) {
 						<li><a href="account.html">Register</a></li>
 						<?php } ?>
 					</ul>
-				</div><!--/.nav-collapse -->
-			</div><!--/.container-fluid -->
+				</div>
+			</div>
 		</nav>
 		<?php if (isset($_SESSION['session_id']) && $_SESSION['session_id'] != '') { ?>
-		 
+			
 		<?php } else { ?>
 		<div class="container">
 			<div class="row">
 				<div class="col-sm-4 col-sm-offset-2">
 					<form id = 'signin-form' class="form-signin" method = "POST" action = "login.php">
 						<h2 class="form-signin-heading">Login</h2>
-						<label for="loginEmail" class="sr-only">Email address</label>
-						<input type="email" id="loginEmail" name = "loginEmail" class="form-control" placeholder="Email address" required="" autofocus="">
-						<label for="loginPassword" class="sr-only">Password</label>
-						<input type="password" id="loginPassword" name = "loginPassword" class="form-control" placeholder="Password" required="">
-						<div class="checkbox">
+						<?php if (isset($_GET['login']) && $_GET['login'] == 0) { ?>
+						<span class = "text-danger">Invalid email or password.</span><br/>
+						<?php } ?>
+						<div class="form-group has-feedback">
+							<label for="loginEmail" class="sr-only">Email address</label>
+							<input type="email" id="loginEmail" name = "loginEmail" class="form-control" placeholder="Email address" required="" autofocus="">
+						</div>
+						
+						<div class="form-group has-feedback">
+							<label for="loginPassword" class="sr-only">Password</label>
+							<input type="password" id="loginPassword" name = "loginPassword" class="form-control" placeholder="Password" required="">
+						</div>
+						<!--<div class="checkbox">
 							<label>
 							<div class="make-switch" data-on-label="Yes" data-off-label="No" data-on="success" data-off="danger">
 								<input value = "1" type="checkbox" id = "loginRemember" name = "loginRemember">
 							</div>
 							Remember me
 							</label>
-						</div>
+						</div>-->
 						<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 					</form>
 				</div>
 				<div class="col-sm-4">
 					<form id = "register-form" class="form-register" onsubmit = "return checked()" action = "register.php" method = "POST">
 						<h2 class="form-signin-heading">Register</h2>
+						
+						<?php if (isset($_GET['uname']) && $_GET['uname'] == 1) { ?>
+						<span class = "text-danger">Username is already in use.</span><br/>
+						<?php } ?>
+						
 						<div class="form-group has-feedback">
 							<label for="registerUsername" class="sr-only">Username</label>
 							<input type="text" name="registerUsername" id="registerUsername" class="form-control" placeholder="Username"autofocus="">
 						</div>
 						
+						<?php if (isset($_GET['email']) && $_GET['email'] == 1) { ?>
+						<span class = "text-danger">Email is already in use.</span><br/>
+						<?php } ?>
+						
 						<div class="form-group has-feedback">
 							<label for="registerEmail" class="sr-only">Email address</label>
 							<input type="email" name="registerEmail" id="registerEmail" class="form-control" placeholder="Email address">
 						</div>
+						
+						<?php if (isset($_GET['pwmatch']) && $_GET['pwmatch'] == 1) { ?>
+						<span class = "text-danger">Passwords do not match.</span><br/>
+						<?php } ?>
 						
 						<div class="form-group has-feedback">
 							<label for="registerPassword" class="sr-only">Password</label>
@@ -149,7 +170,7 @@ if (isset($_SESSION['session_id'])) {
 	function checked() {
 		return $('#registerTOS:checked').length > 0;
 	}
-	$(document).ready(function () {
+	$(document).ready(function () {		
 		$('#register-form').validate({
 			rules: {	
 				registerEmail: {

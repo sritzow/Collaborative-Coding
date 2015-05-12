@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-$username = $_POST['registerUsername'];
-$email = $_POST['registerEmail'];
-$password = $_POST['registerPassword'];
-$cpassword = $_POST['registerCPassword'];
+$username = trim($_POST['registerUsername']);
+$email = trim($_POST['registerEmail']);
+$password = trim($_POST['registerPassword']);
+$cpassword = trim($_POST['registerCPassword']);
 
 if (isset($username, $email, $password, $cpassword)) {
 	try {
@@ -19,7 +19,13 @@ if (isset($username, $email, $password, $cpassword)) {
 				$_SESSION['session_id'] = session_id();
 				$_SESSION['username'] = $username;
 			} else {
-				header('Location: account.html?inuse=1');
+				$user = $query->fetch();
+				if (lower($user['username']) == lower($username)) {
+					header('Location: account.html?uname=1');
+				}
+				if (lower($user['email']) == lower($email)) {
+					header('Location: account.html?email=1');
+				}
 				die();
 			}
 		} else {
@@ -31,6 +37,6 @@ if (isset($username, $email, $password, $cpassword)) {
 	}
 }
 
-//header('Location: index.html');
-//die();
+header('Location: index.html');
+die();
 ?>

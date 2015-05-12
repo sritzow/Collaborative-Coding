@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<?php 
+session_start();
+$session_id = '';
+if (isset($_SESSION['session_id'])) {
+	$session_id = $_SESSION['session_id'];
+} else {
+	header('Location: account.html');
+	die();
+}
+?>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		<link href="style.css" rel="stylesheet">
+		<link href="dist/jquery.treemenu.css" rel="stylesheet">
+		<title>Typing Test</title>
+		<style>
+			body { padding-top: 75px; }
+			.starter-template { padding: 40px 15px; text-align: center; }
+			#code-line { width: 95%; height:500px; }
+			#code-overlay { pointer-events: none; padding-top: 3px; padding-left: 3px; top:-507px; position:relative; width:95%; height: 500px; border: 1px solid; border-color: blue; border-radius: 10px; }
+		</style>
+	</head>
+	<body>
+	<div class="container">
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="index.html">Project name</a>
+				</div>
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#">About</a></li>
+						<li><a href="#">Contact</a></li>
+						
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<?php if (isset($_SESSION['session_id']) && $_SESSION['session_id'] != '') { ?>
+						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $_SESSION['username']; ?> <span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="projects.html">My Projects</a></li>
+								<li><a href="search.html">Search Projects</a></li>
+								<li class="divider"></li>
+								<li class="dropdown-header">My Account</li>
+								<li><a href="account_settings.html">Account Settings</a></li>
+								<li><a href="logout.php">Log Out</a></li>
+							</ul>
+						</li>
+						<?php } else { ?>
+						<li><a href="account.html">Login</a></li>
+						<li><a href="account.html">Register</a></li>
+						<?php } ?>
+					</ul>
+				</div>
+			</div>
+		</nav>
+	</div>
+	<div class="container-fluid">
+		<div class = "row">
+			<div class = "col-sm-3 col-md-2 sidebar">
+				<ul class="tree">
+					<?php
+					try {
+						$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
+						
+						$project_query = $pdo->prepare("SELECT * FROM folders WHERE project_id = ? AND folder_parent_id IS NOT NULL");
+						$project_query->execute(array(1));
+						
+						while ($folders = $project_query->fetch()) {
+							print_r($folders);
+						}
+					} catch (PDOException $e) {
+					
+					}
+					
+					?>
+					<li class="tree-empty"><a href="">Home</a></li>
+					<li class="tree-opened"><span>Category</span>
+					<ul style="display: block;">
+					  <li class="tree-closed"><a href="#">jQuery</a>
+						<ul style="display: none;">
+						  <li class="tree-empty"><a href="#">jQuery</a></li>
+						  <li class="tree-empty"><a href="#">jQuery UI</a></li>
+						  <li class="tree-empty"><a href="#">jQuery Mobile</a></li>
+						</ul>
+					  </li>
+					  <li class="tree-opened"><a href="#">JavaScript</a>
+						<ul style="display: block;">
+						  <li class="tree-empty tree-opened"><a class="active" href="#">AngularJS</a></li>
+						  <li class="tree-empty"><a href="#">React</a></li>
+						  <li class="tree-empty"><a href="#">Backbone</a></li>
+						</ul>
+					  </li>
+					  <li class="tree-empty"><a href="#suits">Golang</a></li>
+					</ul>
+				  </li>
+				  <li class="tree-closed"><a href="#about">About</a>
+					<ul style="display: none;">
+					  <li class="tree-empty"><a href="#">Contact</a></li>
+					  <li class="tree-empty"><a href="#">Blog</a></li>
+					  <li class="tree-closed"><a href="#">Jobs</a>
+						<ul style="display: none;">
+						  <li class="tree-empty"><a href="#jobs1">Job 1</a></li>
+						  <li class="tree-empty"><a href="#jobs2">Job 2</a></li>
+						  <li class="tree-empty"><a href="#jobs3">Job 3</a></li>
+						</ul>
+					  </li>
+					</ul>
+				  </li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="site-wrapper">
+		<div class="site-wrapper-inner">
+			<div class="cover-container">
+				<div class="mastfoot">
+					<div class="inner">
+						<p>Built using <a href="http://getbootstrap.com">Bootstrap</a>, <a href = "http://jquery.com/">jQuery</a>, <a href = "http://ace.c9.io/#nav=about">Ace</a>, <a href = "http://socket.io/">Socket IO</a>, <a href = "https://nodejs.org/">node.js</a><br>
+						Content &copy; <a href="https://twitter.com/SpencerRitzow">2015 Spencer Ritzow</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	</body>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="dist/jquery.treemenu.js"></script>
+	<script>
+	$(".tree").treemenu({delay:500}).openActive();
+
+	</script>
+</html>

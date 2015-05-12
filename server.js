@@ -18,11 +18,11 @@ function log(s) {
 }
 
 io.sockets.on('connection', function(socket) {
-	socket.on('init', function(session_id, room) {
+	socket.on('init', function(session_id, file_id) {
 		console.log('Init received');
         socket.username = session_id;
-        socket.room = room;
-        socket.join(room);
+        socket.room = file_id;
+        socket.join(file_id);
 		
 		var code = null;
 		
@@ -37,15 +37,16 @@ io.sockets.on('connection', function(socket) {
 				var user_id = data['id'];
 				foundAccount = true;
 				
-				roomQuery = connection.query('SELECT * FROM code WHERE room_name = ?', socket.room);
-				roomQuery.on('result', function(roomResult) {
-					rooms[room] = roomResult;
-					log('Room result: ' + roomResult['id']);
+				//Remove room query and store room as id instead of name. reduce 1 query call
+				fileQuery = connection.query('SELECT * FROM files WHERE id = ?', socket.room);
+				fileQuery.on('result', function(fileResult) {
+					rooms[file_id] = fileResult;
+					log('Room result: ' + fileResult['id']);
 					
 					var hasAuth = false;
 					var authLevel = 0;
 					
-					authQuery = connection.query('SELECT * FROM auths WHERE user_id = ? and room_id = ?', [user_id, roomResult['id']]);
+					authQuery = connection.query('SELECT * FROM file_auths WHERE user_id = ? and file_id = ?', [user_id, fileResult['id']]);
 					authQuery.on('result', function(authResult) {
 						log('Auth result: ' + authResult['id']);
 						hasAuth = true;
@@ -55,9 +56,9 @@ io.sockets.on('connection', function(socket) {
 					authQuery.on('error', function() {
 						log('auth error');
 						if (!hasAuth) {
-							if (roomResult['private'] != 1) {
+							if (fileResult['private'] != 1) {
 								log('room is open');
-								connection.query('INSERT INTO auths(user_id, room_id, level) VALUES(?, ?, ?)', [user_id, roomResult['id'], 0]);
+								connection.query('INSERT INTO file_auths(user_id, file_id, level) VALUES(?, ?, ?)', [user_id, fileResult['id'], 0]);
 							} else {
 								socket.emit('fail');
 							}
@@ -68,11 +69,11 @@ io.sockets.on('connection', function(socket) {
 						log('auth end');
 						if (!hasAuth) {
 							log('no auths');
-							if (roomResult['private'] != 1) {
+							if (fileResult['private'] != 1) {
 								log('room is open');
-								connection.query('INSERT INTO auths(user_id, room_id, level) VALUES(?, ?, ?)', [user_id, roomResult['id'], 0]);
-								socket.emit('create_editor', roomResult['language'], roomResult['edit_level'] <= 0);
-								socket.emit('initial_code', roomResult['code'], roomResult['syncAfter']);
+								connection.query('INSERT INTO file_auths(user_id, file_id, level) VALUES(?, ?, ?)', [user_id, fileResult['id'], 0]);
+								socket.emit('create_editor', fileResult['language'], fileResult['edit_level'] <= 0);
+								socket.emit('initial_code', fileResult['code'], fileResult['syncAfter']);
 								if (deltas[socket.room] != null) {
 									socket.emit('update', deltas[socket.room]);
 								}
@@ -81,8 +82,8 @@ io.sockets.on('connection', function(socket) {
 								socket.emit('fail');
 							}
 						} else {
-							socket.emit('create_editor', roomResult['language'], roomResult['edit_level'] <= authLevel);
-							socket.emit('initial_code', roomResult['code'], roomResult['syncAfter']);
+							socket.emit('create_editor', fileResult['language'], fileResult['edit_level'] <= authLevel);
+							socket.emit('initial_code', fileResult['code'], fileResult['syncAfter']);
 							if (deltas[socket.room] != null) {
 								socket.emit('update', deltas[socket.room]);
 							}
@@ -90,7 +91,7 @@ io.sockets.on('connection', function(socket) {
 					});
 				});
 				
-				roomQuery.on('error', function() {
+				fileQuery.on('error', function() {
 					log('room failure');
 					socket.emit('fail');
 				});
@@ -126,7 +127,7 @@ io.sockets.on('connection', function(socket) {
 					if (rooms[socket.room] != null) {
 						if (rooms[socket.room]['private'] == 1 || rooms[socket.room]['edit_level'] > 0) {
 							pool.getConnection(function (err, connection2) {
-								authQuery = connection2.query('SELECT * FROM auths WHERE user_id = ? and room_id = ?', [user_id, rooms[socket.room]['id']]);
+								authQuery = connection2.query('SELECT * FROM file_auths WHERE user_id = ? and file_id = ?', [user_id, socket.room]);
 								var hasAuth = false;
 								
 								authQuery.on('result', function(authResult) {
@@ -178,13 +179,13 @@ io.sockets.on('connection', function(socket) {
 				rooms[socket.room]['lastSync']++;
 			
 			if (hasBackups && rooms[socket.room]['lastSync'] % rooms[socket.room]['backupAfterSyncs'] == 0) {
-				countQuery = connection.query('SELECT count(*) as count FROM code_backups WHERE room_id = ?', rooms[socket.room]['id']);
+				countQuery = connection.query('SELECT count(*) as count FROM file_backups WHERE file_id = ?', socket.room);
 				countQuery.on('result', function(countResult) {				
 					if (countResult['count'] < rooms[socket.room]['numberOfBackups']) {
-						connection.query('INSERT INTO code_backups(room_id, code, date) VALUES(?, ?, ?)', [rooms[socket.room]['id'], code, new Date().getTime()]);
+						connection.query('INSERT INTO file_backups(file_id, code, date) VALUES(?, ?, ?)', [socket.room, code, new Date().getTime()]);
 					} else {
-						connection.query('DELETE FROM code_backups WHERE room_id = ? ORDER BY id ASC LIMIT 1', rooms[socket.room]['id']);
-						connection.query('INSERT INTO code_backups(room_id, code, date) VALUES(?, ?, ?)', [rooms[socket.room]['id'], code, new Date().getTime()]);
+						connection.query('DELETE FROM file_backups WHERE file_id = ? ORDER BY id ASC LIMIT 1', socket.room);
+						connection.query('INSERT INTO file_backups(file_id, code, date) VALUES(?, ?, ?)', [socket.room, code, new Date().getTime()]);
 					}
 				});
 				
@@ -194,7 +195,7 @@ io.sockets.on('connection', function(socket) {
 			}
 			
 			console.log('sync init: ' + code);
-			connection.query('UPDATE code SET code = ? WHERE id = ?', [code, rooms[socket.room]['id']]);
+			connection.query('UPDATE files SET code = ? WHERE id = ?', [code, socket.room]);
 			deltas[socket.room] = [];
 			connection.release();
 		});

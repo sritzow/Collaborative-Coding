@@ -16,18 +16,15 @@ try {
 	
 	if (isset($username)) {
 		$query = $pdo->prepare('SELECT * FROM accounts WHERE lower(username) = lower(?)');
-		$result = $query->execute(array($username));
+		$query->execute(array($username));
 	} else if (isset($email)) {
 		$query = $pdo->prepare('SELECT * FROM accounts WHERE lower(email) = lower(?)');
-		$result = $query->execute(array($email));
+		$query->execute(array($email));
 	}
 	
-	if ($result) {
-		$obj = $query->fetch();
-		if ($obj != null) {
-			echo 'notok';
-			die();
-		}
+	if ($query->rowCount() > 0) {
+		echo 'notok';
+		die();
 	}
 	echo 'ok';
 	die();
@@ -35,4 +32,5 @@ try {
 	echo $e->getMessage();
 }
 echo 'error';
+die();
 ?>
