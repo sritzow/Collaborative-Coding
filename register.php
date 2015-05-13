@@ -9,7 +9,7 @@ $cpassword = trim($_POST['registerCPassword']);
 if (isset($username, $email, $password, $cpassword)) {
 	try {
 		if ($password === $cpassword) {
-			$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
+			$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 			$query = $pdo->prepare('SELECT * FROM accounts WHERE lower(username) = lower(?) OR lower(email) = lower(?)');
 			$query->execute(array($username, $email));
 			if ($query->rowCount() == 0) {

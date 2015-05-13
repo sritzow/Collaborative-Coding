@@ -8,6 +8,28 @@ if (isset($_SESSION['session_id'])) {
 	header('Location: account.html');
 	die();
 }
+
+try {
+	$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
+	$projectQuery = $pdo->prepare("SELECT * FROM projects WHERE id = ?");
+	$projectQuery->execute(array($_GET['id']));
+	
+	if ($projectQuery->rowCount() > 0) {
+		$project = $projectQuery->fetch();
+		if ($project['private'] == 1) {
+			$query = $pdo->prepare("SELECT * FROM project_auths WHERE user_id = ? AND project_id = ?");
+			$query->execute(array($_SESSION['user_id'], $_GET['id']));
+			
+			if ($query->rowCount() == 0) {
+				header('Location: index.html');
+				die();
+			}
+		}
+	}
+} catch (PDOException $e) {
+	header('Location: index.html');
+	die();
+}
 ?>
 
 <html>
@@ -70,53 +92,9 @@ if (isset($_SESSION['session_id'])) {
 	<div class="container-fluid">
 		<div class = "row">
 			<div class = "col-sm-3 col-md-2 sidebar">
-				<ul class="tree">
-					<?php
-					try {
-						$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
-						
-						$project_query = $pdo->prepare("SELECT * FROM folders WHERE project_id = ? AND folder_parent_id IS NULL");
-						$project_query->execute(array($_GET['id']));
-						
-						function getFiles($folder_id, $pdo) {
-							$files = $pdo->prepare("SELECT * FROM files WHERE folder_id = ?");
-							$files->execute(array($folder_id));
-							while ($file = $files->fetch()) {
-								echo '<li><span style = "cursor: pointer;" onclick = "setTitle(this); openFile(\'' .  $file['id'] . '\');">' . $file['name'] . '.' . $file['extension'] . '</span></li>';
-							}
-						}
-						
-						function getChildren($folder_id, $pdo) {
-							$query = $pdo->prepare("SELECT * FROM folders WHERE folder_parent_id = ?");
-							$query->execute(array($folder_id));
-							while ($folder = $query->fetch()) {
-								echo '<li>' . $folder['folder_name'];
-								echo '<ul>';
-								if ($folder['has_child'] == 1) {
-									getChildren($folder['id'], $pdo);
-								}
-								getFiles($folder['id'], $pdo);
-								echo '<li><span  id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder_id . '" style = "cursor: pointer;">+</span></li>';
-								echo '</ul>';
-								echo '</li>';
-							}
-						}
-						
-						while ($folder = $project_query->fetch()) {
-							echo '<li>' . $folder['folder_name'];
-							echo '<ul>';
-							getChildren($folder['id'], $pdo);
-							getFiles($folder['id'], $pdo);
-							echo '<li><span id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder['id'] . '" style = "cursor: pointer;">+</span></li>';
-							echo '</ul>';
-							echo '</li>';
-						}
-						echo '<li><span id = "0" data-toggle = "modal" data-target = "#fileModal" folder_id = "0" style = "cursor: pointer;">+</span></li>';
-					} catch (PDOException $e) {
-					
-					}
-					?>
-				</ul>
+				<div id = "treehelper">
+				<?php include('folder_structure.html'); ?>
+				</div>
 			</div>
 			<div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
@@ -183,6 +161,32 @@ if (isset($_SESSION['session_id'])) {
 	<script src="dist/jquery.treemenu.js"></script>
 	<script src="socket.io/socket.io.js"></script>
 	<script>
+	
+	function deleteFolder(type, id) {
+		$.ajax({
+			url: 'create_file.php',
+			type: 'post',
+			data: {
+				file_type: $('#file-type').val(),
+				folder_id: $('#modal_folder_id').val(),
+				project_id: <?php echo $_GET['id']; ?>
+			},
+			
+			success: function(data) {
+				console.log(data);
+				var data = data.split(',');
+				if(data[0] == "ok") {
+					$('#treehelper').load('folder_structure.html?id=<?php echo $_GET['id']; ?>', function() {
+						$(".tree").treemenu({delay:500}).openActive();
+					});
+				}
+			},
+			
+			error: function(data) {
+				console.log(data);
+			}
+		});
+	}
 	function createFolder() {
 		var file_name = $('#file-name').val();
 		if (file_name != null && file_name != '') {
@@ -200,10 +204,11 @@ if (isset($_SESSION['session_id'])) {
 				
 				success: function(data) {
 					console.log(data);
-					if(data == "ok") {
-						
-					} else {
-						
+					var data = data.split(',');
+					if(data[0] == "ok") {
+						$('#treehelper').load('folder_structure.html?id=<?php echo $_GET['id']; ?>', function() {
+							$(".tree").treemenu({delay:500}).openActive();
+						});
 					}
 				},
 				

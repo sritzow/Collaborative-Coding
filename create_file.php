@@ -6,16 +6,10 @@ if (isset($_POST['file_type'], $_POST['folder_id'], $_POST['file_name'])) {
 	$folder_id = $_POST['folder_id'];
 	$file_name = $_POST['file_name'];
 	$project_id = $_POST['project_id'];
-	
-	echo $file_type;
-	echo $folder_id;
-	echo $file_name;
+
 	if ($folder_id == 0) { $folder_id = null; }
 	try {
-		echo 'Create connection';
-		$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
-		
-		echo 'Select join';
+		$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 		if ($folder_id == null) {
 			$query = $pdo->prepare("SELECT * FROM project_auths WHERE project_id = ? AND user_id = ?");
 			$query->execute(array($project_id, $_SESSION['user_id']));
@@ -43,11 +37,9 @@ if (isset($_POST['file_type'], $_POST['folder_id'], $_POST['file_name'])) {
 					echo 'ok';
 				}
 			}
-		}
-		
+		}		
 	} catch (PDOException $e) {
 		echo $e;
 	}
 }
-
 ?>

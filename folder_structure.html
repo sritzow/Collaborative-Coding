@@ -1,0 +1,51 @@
+<ul id = "tree" class="tree">
+<?php
+if (session_id() == '') {
+	session_start();
+}
+
+try {
+	$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
+	
+	$project_query = $pdo->prepare("SELECT * FROM folders WHERE project_id = ? AND folder_parent_id IS NULL");
+	$project_query->execute(array($_GET['id']));
+	
+	function getFiles($folder_id, $pdo) {
+		$files = $pdo->prepare("SELECT * FROM files WHERE folder_id = ?");
+		$files->execute(array($folder_id));
+		while ($file = $files->fetch()) {
+			echo '<li><span style = "cursor: pointer;" onclick = "setTitle(this); openFile(\'' .  $file['id'] . '\');">' . $file['name'] . '.' . $file['extension'] . '</span></li>';
+		}
+	}
+	
+	function getChildren($folder_id, $pdo) {
+		$query = $pdo->prepare("SELECT * FROM folders WHERE folder_parent_id = ?");
+		$query->execute(array($folder_id));
+		while ($folder = $query->fetch()) {
+			echo '<li>' . $folder['folder_name'];
+			echo '<ul>';
+			if ($folder['has_child'] == 1) {
+				getChildren($folder['id'], $pdo);
+			}
+			getFiles($folder['id'], $pdo);
+			echo '<li><span id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder['id'] . '" style = "cursor: pointer;">+</span></li>';
+			echo '</ul>';
+			echo '</li>';
+		}
+	}
+	
+	while ($folder = $project_query->fetch()) {
+		echo '<li>' . $folder['folder_name'];
+		echo '<ul>';
+		getChildren($folder['id'], $pdo);
+		getFiles($folder['id'], $pdo);
+		echo '<li><span id = "' . $folder['id'] . '" data-toggle = "modal" data-target = "#fileModal" folder_id = "' . $folder['id'] . '" style = "cursor: pointer;">+</span></li>';
+		echo '</ul>';
+		echo '</li>';
+	}
+	echo '<li><span id = "0" data-toggle = "modal" data-target = "#fileModal" folder_id = "0" style = "cursor: pointer;">+</span></li>';
+} catch (PDOException $e) {
+
+}
+?>
+</ul>

@@ -44,7 +44,7 @@ function openFile(file_id) {
 		socket.close();
 	}
 	
-	socket = io.connect('http://localhost:8000');
+	socket = io.connect('http://104.236.46.238:8000');
 	
 	socket.on('connect', function(){
 		console.log('Open file request: ' + file_id);
@@ -57,7 +57,7 @@ function openFile(file_id) {
 	
 	socket.on('disconnect', function() {
 		socket.close();
-		socket = io.connect('http://localhost:8000');
+		socket = io.connect('http://104.236.46.238:8000');
 	});
 	
 	socket.on('fail', function() {

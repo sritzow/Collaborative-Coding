@@ -5,7 +5,7 @@ var rooms = [];
 
 var pool  = mysql.createPool({
 	host     : 'localhost',
-	user : 'root',
+	user : 'collab',
 	password: '',
 	database : 'projects'
 });
@@ -136,8 +136,10 @@ io.sockets.on('connection', function(socket) {
 								});
 								
 								authQuery.on('end', function() {
-									if (!hasAuth) {
+									if (!hasAuth && rooms[socket.room]['private'] == 1) {
 										socket.emit('fail');
+									} else if (!hasAuth) {
+										socket.emit('readonly', true);
 									} else {
 										if (authLevel >= rooms[socket.room]['edit_level']) {
 											log('update send');

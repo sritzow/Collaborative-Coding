@@ -5,7 +5,7 @@ $email = trim($_POST['loginEmail']);
 $password = trim($_POST['loginPassword']);
 
 try {
-	$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "root", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
+	$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 	
 	$query = $pdo->prepare('SELECT * FROM accounts WHERE lower(email) = lower(?)');
 	$query->execute(array($email));
