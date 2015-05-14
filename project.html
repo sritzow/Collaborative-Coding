@@ -25,6 +25,9 @@ try {
 				die();
 			}
 		}
+	} else {
+		header('Location: index.html');
+		die();
 	}
 } catch (PDOException $e) {
 	header('Location: index.html');
@@ -73,10 +76,10 @@ try {
 						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $_SESSION['username']; ?> <span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="projects.html">My Projects</a></li>
-								<li><a href="search.html">Search Projects</a></li>
+								<li><a href="search_projects.html">Search Projects</a></li>
 								<li class="divider"></li>
 								<li class="dropdown-header">My Account</li>
-								<li><a href="account_settings.html">Account Settings</a></li>
+								<li><a href="account.html">Account Settings</a></li>
 								<li><a href="logout.php">Log Out</a></li>
 							</ul>
 						</li>
@@ -92,6 +95,20 @@ try {
 	<div class="container-fluid">
 		<div class = "row">
 			<div class = "col-sm-3 col-md-2 sidebar">
+				<?php
+				if ($project['manager_id'] != $_SESSION['user_id']) {
+					$query = $pdo->prepare("SELECT * FROM project_auths WHERE user_id = ? AND project_id = ?");
+					$query->execute(array($_SESSION['user_id'], $_GET['id']));
+					if ($query->rowCount() > 0) {
+						$auth = $query->fetch();
+				?>
+				<label>Follow Project</label>
+				<input <?php if ($auth['following']) { echo 'checked'; } ?> type = "checkbox" id = "follow" name = "follow">
+				<?php } else { ?>
+				<label>Follow Project</label>
+				<input type = "checkbox" id = "follow" name = "follow">
+				<?php }
+				} ?>
 				<div id = "treehelper">
 				<?php include('folder_structure.html'); ?>
 				</div>
@@ -105,6 +122,8 @@ try {
 						</div>
 						<div class="modal-body">
 							<form>
+								<input type = "hidden" id = "file-ext" name = "file-ext" value = "js">
+								<input type = "hidden" id = "file-lang" name = "file-lang" value = "javascript">
 								<input type = "hidden" id = "file-type" name = "file-type" value = "Folder">
 								<input type = "hidden" id = "modal_folder_id" name = "modal_folder_id" value = "">
 								<input type = "hidden" id = "modal_project_id" name = "modal_project_id" value = "<?php echo $_GET['id']; ?>">
@@ -120,6 +139,25 @@ try {
 													</ul>
 												</div><!-- /btn-group -->
 												<input id = "file-name" type="text" class="form-control" aria-label="...">
+												<div style = "display:none" id = "file-ext-div" class="input-group-btn">
+													<button id = "file-ext-button" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><span id = 'file-ext-span'>JavaScript</span><span class="caret"></span></button>
+													<ul class="dropdown-menu" role="menu">
+														<li><a onclick = "setExt('JavaScript', 'js', 'javascript');">JavaScript</a></li>
+														<li><a onclick = "setExt('C#', 'cs', 'csharp');">C#</a></li>
+														<li><a onclick = "setExt('PHP', 'php', 'php');">PHP</a></li>
+														<li><a onclick = "setExt('HTML', 'html', 'html');">HTML</a></li>
+														<li><a onclick = "setExt('CSS', 'css', 'css');">CSS</a></li>
+														<li><a onclick = "setExt('Python', 'py', 'python');">Python</a></li>
+														<li><a onclick = "setExt('Java', 'java', 'java');">Java</a></li>
+													</ul>
+													<script>
+														function setExt(name, ext, lang) {
+															$('#file-ext-span').html(name + ' ');
+															$('#file-ext').val(ext);
+															$('#file-lang').val(lang);
+														}
+													</script>
+												</div><!-- /btn-group -->
 											</div>
 										</div>
 									</div>
@@ -134,6 +172,7 @@ try {
 			</div>
 			<div class = "col-md-6 col-md-offset-1">
 				<span id = "file-title"></span><br/><br />
+				<img id = 'codeRun' onclick = 'runCode()' style = "cursor: pointer; padding: 10px; width:50px; "src = 'images/run.png' alt = 'run' />
 				<div id = "code-container" style = "text-align:left;" class="lead">
 					<pre id = "code-line"></pre>
 				</div>
@@ -162,13 +201,39 @@ try {
 	<script src="socket.io/socket.io.js"></script>
 	<script>
 	
-	function deleteFolder(type, id) {
+	$('#follow').on('change', function() {
+		var follow = $(this).is(':checked')
 		$.ajax({
-			url: 'create_file.php',
+			url: 'update_follow.php',
 			type: 'post',
 			data: {
-				file_type: $('#file-type').val(),
-				folder_id: $('#modal_folder_id').val(),
+				follow: follow,
+				project_id: <?php echo $_GET['id']; ?>
+			},
+			
+			success: function(data) {
+				
+			},
+			
+			error: function(data) {
+				
+			}
+		});
+	});
+	
+	function deleteFile(name, id) {
+		if (confirm("Are you sure you want to delete " + name)) {
+			deleteFolder('File', id);
+		}
+	}
+
+	function deleteFolder(type, id) {
+		$.ajax({
+			url: 'remove_file.php',
+			type: 'post',
+			data: {
+				file_type: type,
+				file_id: id,
 				project_id: <?php echo $_GET['id']; ?>
 			},
 			
@@ -199,7 +264,9 @@ try {
 					file_type: $('#file-type').val(),
 					folder_id: $('#modal_folder_id').val(),
 					file_name: $('#file-name').val(),
-					project_id: $('#modal_project_id').val()
+					project_id: $('#modal_project_id').val(),
+					file_ext: $('#file-ext').val(),
+					file_lang: $('#file-lang').val()
 				},
 				
 				success: function(data) {

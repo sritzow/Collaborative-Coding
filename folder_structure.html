@@ -14,7 +14,8 @@ try {
 		$files = $pdo->prepare("SELECT * FROM files WHERE folder_id = ?");
 		$files->execute(array($folder_id));
 		while ($file = $files->fetch()) {
-			echo '<li><span style = "cursor: pointer;" onclick = "setTitle(this); openFile(\'' .  $file['id'] . '\');">' . $file['name'] . '.' . $file['extension'] . '</span></li>';
+			echo '<li><span style = "cursor: pointer;" onclick = "setTitle(this); openFile(\'' .  $file['id'] . '\');">' . $file['name'] . '.' . $file['extension'] . '</span>';
+			echo '<span style = "cursor: pointer;" onclick = "deleteFile(\'' . $file['name'] . '.' . $file['extension'] . '\', ' . $file['id'] . ');"> -- </span></li>';
 		}
 	}
 	
@@ -23,6 +24,9 @@ try {
 		$query->execute(array($folder_id));
 		while ($folder = $query->fetch()) {
 			echo '<li>' . $folder['folder_name'];
+			if ($folder['has_child'] == 0) {
+				echo '<span style = "cursor: pointer;" onclick = "deleteFolder(\'Folder\', '. $folder['id'] . ');"> -- </span>';
+			}
 			echo '<ul>';
 			if ($folder['has_child'] == 1) {
 				getChildren($folder['id'], $pdo);
@@ -36,6 +40,9 @@ try {
 	
 	while ($folder = $project_query->fetch()) {
 		echo '<li>' . $folder['folder_name'];
+		if ($folder['has_child'] == 0) {
+			echo '<span style = "cursor: pointer;" onclick = "deleteFolder(\'Folder\', '. $folder['id'] . ');"> -- </span>';
+		}
 		echo '<ul>';
 		getChildren($folder['id'], $pdo);
 		getFiles($folder['id'], $pdo);

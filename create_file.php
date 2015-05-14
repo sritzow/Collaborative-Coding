@@ -33,7 +33,7 @@ if (isset($_POST['file_type'], $_POST['folder_id'], $_POST['file_name'])) {
 					echo 'ok';
 				} else {
 					$add = $pdo->prepare("INSERT INTO files(name, folder_id, language, extension) VALUES(?, ?, ?, ?); UPDATE folders SET has_child = 1 WHERE id = ?");
-					$add->execute(array($file_name, $folder_id, 'javascript', 'js', $folder_id));
+					$add->execute(array($file_name, $folder_id, $_POST['file_lang'], $_POST['file_ext'], $folder_id));
 					echo 'ok';
 				}
 			}

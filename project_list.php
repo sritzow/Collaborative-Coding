@@ -7,7 +7,7 @@ if (isset($_SESSION['user_id'])) {
 	try {
 		$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 		
-		$query = $pdo->prepare('SELECT projects.id, manager_id, name, description FROM `projects` INNER JOIN `project_auths` ON project_auths.following = 1 AND project_auths.project_id = projects.id AND project_auths.user_id = ? AND project_auths.level >= 1 OR projects.manager_id = ? GROUP BY projects.id, manager_id, name, description');
+		$query = $pdo->prepare('SELECT projects.id, manager_id, name, description FROM `projects` INNER JOIN `project_auths` ON project_auths.following = 1 AND project_auths.project_id = projects.id AND project_auths.user_id = ? OR projects.manager_id = ? GROUP BY projects.id, manager_id, name, description');
 		$query->execute(array($_SESSION['user_id'], $_SESSION['user_id']));
 		if ($query->rowCount() > 0) {
 			while ($row = $query->fetch()) { 

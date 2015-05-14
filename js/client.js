@@ -19,6 +19,11 @@ var syncAfter = 25;
 var currentFile = 0;
 
 function setType(type) {
+	if (type == 'File') {
+		$('#file-ext-div').show();
+	} else {
+		$('#file-ext-div').hide();
+	}
 	$('#file-type-span').html(type + ' ');
 	$('#file-type').val(type);
 }
@@ -76,7 +81,7 @@ function openFile(file_id) {
 		if (editor == null) {
 			console.log('editor is null');
 			editor = ace.edit("code-line");
-			editor.setTheme("ace/theme/twilight");
+			editor.setTheme("ace/theme/monokai");
 			editor.getSession().setMode("ace/mode/" + lang);
 			editor.setHighlightActiveLine(true);
 			editor.setReadOnly(!canEdit);
