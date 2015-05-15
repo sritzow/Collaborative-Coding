@@ -18,7 +18,7 @@ if (isset($_SESSION['session_id'])) {
 		<!-- Latest compiled and minified CSS -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link href="style.css" rel="stylesheet">
-		<title>Typing Test</title>
+		<title>Dev Coding</title>
 		<style>
 			body { padding-top: 75px; }
 			.starter-template { padding: 40px 15px; text-align: center; }
@@ -38,14 +38,9 @@ if (isset($_SESSION['session_id'])) {
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="index.html">Project name</a>
+					<a class="navbar-brand" href="index.html">Dev Coding</a>
 				</div>
 				<div id="navbar" class="navbar-collapse collapse">
-					<ul class="nav navbar-nav">
-						<li><a href="#">About</a></li>
-						<li><a href="#">Contact</a></li>
-						
-					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						<?php if (isset($_SESSION['session_id']) && $_SESSION['session_id'] != '') { ?>
 						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $_SESSION['username']; ?> <span class="caret"></span></a>

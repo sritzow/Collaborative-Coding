@@ -6,7 +6,7 @@ if (isset($_POST['project_description'], $_POST['project_title'], $_POST['projec
 	try {
 		$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
 		
-		$private = isset($_POST['private']) ? $_POST['private'] : 0;
+		$private = isset($_POST['private']) ? 1 : 0;
 		$description = htmlentities($_POST['project_description']);
 		$project_title = htmlentities($_POST['project_title']);
 		$project_id = $_POST['project_id'];

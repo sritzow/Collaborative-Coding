@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+session_regenerate_id();
 $email = trim($_POST['loginEmail']);
 $password = trim($_POST['loginPassword']);
 
