@@ -174,7 +174,7 @@ io.sockets.on('connection', function(socket) {
 	
 	socket.on('sync', function(code) {
 		pool.getConnection(function (err, connection) {
-			var hasBackups = rooms[socket.room]['hasBackups'] == 1;
+			var hasBackups = true; //rooms[socket.room]['hasBackups'] == 1;
 			if (rooms[socket.room]['lastSync'] == null)
 				rooms[socket.room]['lastSync'] = 1;
 			else

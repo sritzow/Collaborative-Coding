@@ -1,7 +1,5 @@
 <?php
 session_start();
-print_r($_POST);
-
 if (isset($_POST['project_description'], $_POST['project_title'], $_POST['project_id'])) {
 	try {
 		$pdo = new PDO("mysql:host=127.0.0.1;dbname=projects", "collab", "", array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE  => PDO::ERRMODE_EXCEPTION));
